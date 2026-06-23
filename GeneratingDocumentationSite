@@ -12,6 +12,8 @@ DESTINATION="${DESTINATION:-generic/platform=iOS}"
 
 DOCC="$(xcrun --find docc)"
 
+# Blank or root hosting paths fall back to TARGET_NAME so the shared docs
+# repository can host multiple package sites under sibling subpaths.
 HOSTING_BASE_PATH="$(printf '%s' "$HOSTING_BASE_PATH" | sed -E 's#^[[:space:]/]+##; s#[[:space:]/]+$##')"
 if [ -z "$HOSTING_BASE_PATH" ]; then
   HOSTING_BASE_PATH="$TARGET_NAME"

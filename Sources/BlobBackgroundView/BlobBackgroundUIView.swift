@@ -1,5 +1,17 @@
 import UIKit
 
+private final class NotificationObserverBag {
+  private var observers: [NSObjectProtocol] = []
+
+  func add(_ observer: NSObjectProtocol) {
+    observers.append(observer)
+  }
+
+  deinit {
+    observers.forEach(NotificationCenter.default.removeObserver)
+  }
+}
+
 @MainActor
 public final class BlobBackgroundUIView: UIView {
   private struct BlobSeed {
@@ -12,9 +24,8 @@ public final class BlobBackgroundUIView: UIView {
 
   private let gradientLayer = CAGradientLayer()
   private var blobViews: [UIView] = []
-  private var foregroundObserver: NSObjectProtocol?
   private var lastLayoutSize: CGSize = .zero
-  private var reduceMotionObserver: NSObjectProtocol?
+  private let notificationObservers = NotificationObserverBag()
 
   public private(set) var configuration: BlobBackgroundConfiguration
 
@@ -45,15 +56,6 @@ public final class BlobBackgroundUIView: UIView {
   @available(*, unavailable)
   required init?(coder: NSCoder) {
     fatalError("init(coder:) has not been implemented")
-  }
-
-  deinit {
-    if let reduceMotionObserver {
-      NotificationCenter.default.removeObserver(reduceMotionObserver)
-    }
-    if let foregroundObserver {
-      NotificationCenter.default.removeObserver(foregroundObserver)
-    }
   }
 
   public override func layoutSubviews() {
@@ -101,7 +103,7 @@ public final class BlobBackgroundUIView: UIView {
     gradientLayer.startPoint = CGPoint(x: 0.18, y: 0)
     gradientLayer.endPoint = CGPoint(x: 0.82, y: 1)
 
-    reduceMotionObserver = NotificationCenter.default.addObserver(
+    notificationObservers.add(NotificationCenter.default.addObserver(
       forName: UIAccessibility.reduceMotionStatusDidChangeNotification,
       object: nil,
       queue: .main
@@ -109,9 +111,9 @@ public final class BlobBackgroundUIView: UIView {
       Task { @MainActor [weak self] in
         self?.refreshPulseAnimations()
       }
-    }
+    })
 
-    foregroundObserver = NotificationCenter.default.addObserver(
+    notificationObservers.add(NotificationCenter.default.addObserver(
       forName: UIApplication.willEnterForegroundNotification,
       object: nil,
       queue: .main
@@ -119,7 +121,7 @@ public final class BlobBackgroundUIView: UIView {
       Task { @MainActor [weak self] in
         self?.refreshPulseAnimations(forceRestart: true)
       }
-    }
+    })
 
     apply(configuration, animated: false)
   }
