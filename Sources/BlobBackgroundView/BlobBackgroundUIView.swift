@@ -61,7 +61,10 @@ public final class BlobBackgroundUIView: UIView {
 
   public override func layoutSubviews() {
     super.layoutSubviews()
-    gradientLayer.frame = bounds
+
+    if gradientLayer.frame != bounds {
+      gradientLayer.frame = bounds
+    }
 
     guard lastLayoutSize != bounds.size else {
       return
