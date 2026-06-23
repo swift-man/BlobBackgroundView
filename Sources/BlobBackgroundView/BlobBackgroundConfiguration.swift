@@ -1,7 +1,10 @@
+#if canImport(UIKit)
 import UIKit
 
 public struct BlobBackgroundConfiguration: Equatable {
   /// The maximum number of blobs rendered by the built-in seed layout.
+  ///
+  /// Keep this value in sync with the seed list used by `BlobBackgroundUIView`.
   public static let maxBlobCount = 12
 
   public var animationSpeed: Double {
@@ -146,3 +149,4 @@ public struct BlobBackgroundTheme: Equatable {
     accent: UIColor(red: 1, green: 0.82, blue: 0.3, alpha: 1)
   )
 }
+#endif

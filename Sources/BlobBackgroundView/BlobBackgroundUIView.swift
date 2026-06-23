@@ -1,3 +1,4 @@
+#if canImport(UIKit)
 import UIKit
 
 private final class NotificationObserverBag {
@@ -289,3 +290,4 @@ private func colorsEqual(_ lhs: [Any]?, _ rhs: [CGColor]) -> Bool {
     left == right
   }
 }
+#endif
