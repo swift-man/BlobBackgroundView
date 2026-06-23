@@ -41,4 +41,5 @@ jobs:
           publish_branch: main
           publish_dir: ./docs
           destination_dir: BlobBackgroundView
+          keep_files: true
           full_commit_message: Deploy BlobBackgroundView DocC from ${{ github.repository }}@${{ github.sha }}

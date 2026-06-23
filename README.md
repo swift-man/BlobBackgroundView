@@ -42,6 +42,8 @@ You can also embed the SwiftUI background view directly when you need more layou
 BlobBackgroundView(configuration: .success)
 ```
 
+`animatedUpdates` controls transition animations when the configuration changes. It does not disable the ongoing pulse effect; use Reduce Motion or set `jellyStrength` to `0` when the background should stay still.
+
 ## UIKit
 
 ```swift
@@ -83,4 +85,4 @@ let configuration = BlobBackgroundConfiguration(
 )
 ```
 
-`blobCount` is clamped to `BlobBackgroundConfiguration.maxBlobCount` (12). `BlobBackgroundUIView` automatically pauses pulse animations when the view leaves a window, restarts them when the app returns to the foreground, and respects Reduce Motion.
+Numeric configuration values are normalized to safe ranges. `blobCount` is clamped to `BlobBackgroundConfiguration.maxBlobCount` (12). `BlobBackgroundUIView` automatically pauses pulse animations when the view leaves a window, restarts them when the app returns to the foreground, and respects Reduce Motion.

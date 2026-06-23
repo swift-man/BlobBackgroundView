@@ -85,12 +85,20 @@ perl -0pi -e '
   s#href="/favicon\.ico"#href="$base/favicon.ico"#g;
   s#href="/favicon\.svg"#href="$base/favicon.svg"#g;
   s#var baseUrl = "/"#var baseUrl = "$base/"#g;
+  s#src="/favicons/#src="$base/favicons/#g;
+  s#href="/favicons/#href="$base/favicons/#g;
+  s#src="/images/#src="$base/images/#g;
+  s#href="/images/#href="$base/images/#g;
   s#src="/js/#src="$base/js/#g;
   s#href="/css/#href="$base/css/#g;
 ' "$INDEX_HTML"
 
 reject_index_text 'var baseUrl = "/"' "base URL placeholder"
 reject_index_text 'href="/css/' "stylesheet path placeholder"
+reject_index_text 'src="/favicons/' "favicon path placeholder"
+reject_index_text 'href="/favicons/' "favicon path placeholder"
+reject_index_text 'src="/images/' "image path placeholder"
+reject_index_text 'href="/images/' "image path placeholder"
 reject_index_text 'src="/js/' "script path placeholder"
 require_index_text "var baseUrl = \"$HOSTING_BASE_PATH/\"" "rewritten base URL"
 require_index_text "href=\"$HOSTING_BASE_PATH/css/" "rewritten stylesheet path"

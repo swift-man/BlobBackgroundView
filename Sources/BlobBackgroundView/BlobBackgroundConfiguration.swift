@@ -4,14 +4,43 @@ public struct BlobBackgroundConfiguration: Equatable {
   /// The maximum number of blobs rendered by the built-in seed layout.
   public static let maxBlobCount = 12
 
-  public var animationSpeed: Double
+  public var animationSpeed: Double {
+    didSet {
+      animationSpeed = Self.normalized(animationSpeed, min: 0.2, max: 3, fallback: 1)
+    }
+  }
 
   /// Requested blob count. Values above ``maxBlobCount`` are clamped.
-  public var blobCount: Int
-  public var blobScale: Double
-  public var intensity: Double
-  public var jellyStrength: Double
-  public var positionDrift: Double
+  public var blobCount: Int {
+    didSet {
+      blobCount = Self.normalizedBlobCount(blobCount)
+    }
+  }
+
+  public var blobScale: Double {
+    didSet {
+      blobScale = Self.normalized(blobScale, min: 0.2, max: 3, fallback: 1)
+    }
+  }
+
+  public var intensity: Double {
+    didSet {
+      intensity = Self.normalized(intensity, min: 0.2, max: 1.8, fallback: 1)
+    }
+  }
+
+  public var jellyStrength: Double {
+    didSet {
+      jellyStrength = Self.normalized(jellyStrength, min: 0, max: 1.5, fallback: 0)
+    }
+  }
+
+  public var positionDrift: Double {
+    didSet {
+      positionDrift = Self.normalized(positionDrift, min: 0, max: 1.5, fallback: 0)
+    }
+  }
+
   public var theme: BlobBackgroundTheme
 
   public init(
@@ -24,12 +53,12 @@ public struct BlobBackgroundConfiguration: Equatable {
     animationSpeed: Double = 1
   ) {
     self.theme = theme
-    self.intensity = intensity
-    self.blobCount = blobCount
-    self.blobScale = blobScale
-    self.jellyStrength = jellyStrength
-    self.positionDrift = positionDrift
-    self.animationSpeed = animationSpeed
+    self.intensity = Self.normalized(intensity, min: 0.2, max: 1.8, fallback: 1)
+    self.blobCount = Self.normalizedBlobCount(blobCount)
+    self.blobScale = Self.normalized(blobScale, min: 0.2, max: 3, fallback: 1)
+    self.jellyStrength = Self.normalized(jellyStrength, min: 0, max: 1.5, fallback: 0)
+    self.positionDrift = Self.normalized(positionDrift, min: 0, max: 1.5, fallback: 0)
+    self.animationSpeed = Self.normalized(animationSpeed, min: 0.2, max: 3, fallback: 1)
   }
 
   public static let idle = BlobBackgroundConfiguration(
@@ -58,6 +87,18 @@ public struct BlobBackgroundConfiguration: Equatable {
     positionDrift: 0.86,
     jellyStrength: 0.62
   )
+
+  private static func normalized(_ value: Double, min: Double, max: Double, fallback: Double) -> Double {
+    guard value.isFinite else {
+      return fallback
+    }
+
+    return Swift.max(min, Swift.min(max, value))
+  }
+
+  private static func normalizedBlobCount(_ value: Int) -> Int {
+    Swift.max(0, Swift.min(value, maxBlobCount))
+  }
 }
 
 public struct BlobBackgroundTheme: Equatable {

@@ -239,6 +239,10 @@ public final class BlobBackgroundUIView: UIView {
 
   private func startPulseAnimation(for view: UIView, index: Int) {
     let strength = CGFloat(clamp(configuration.jellyStrength, min: 0, max: 1.5, fallback: 0))
+    guard strength > 0 else {
+      return
+    }
+
     let speed = clamp(configuration.animationSpeed, min: 0.2, max: 3, fallback: 1)
     let animation = CABasicAnimation(keyPath: "transform.scale")
     animation.fromValue = 1 - 0.06 * strength
