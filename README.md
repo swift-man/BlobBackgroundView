@@ -42,7 +42,7 @@ You can also embed the SwiftUI background view directly when you need more layou
 BlobBackgroundView(configuration: .success)
 ```
 
-`animatedUpdates` controls transition animations when the configuration changes. It does not disable the ongoing pulse effect; use Reduce Motion or set `jellyStrength` to `0` when the background should stay still.
+`animatesTransitions` controls transition animations when the configuration changes. It does not disable the ongoing pulse effect; use Reduce Motion or set `jellyStrength` to `0` when the background should stay still.
 
 ## UIKit
 

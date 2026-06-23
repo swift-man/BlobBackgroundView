@@ -3,19 +3,19 @@ import SwiftUI
 import UIKit
 
 public struct BlobBackgroundView: UIViewRepresentable {
-  public var animatedUpdates: Bool
+  public var animatesTransitions: Bool
   public var configuration: BlobBackgroundConfiguration
 
   public init(
     configuration: BlobBackgroundConfiguration = .idle,
-    animatedUpdates: Bool = true
+    animatesTransitions: Bool = true
   ) {
     self.configuration = configuration
-    self.animatedUpdates = animatedUpdates
+    self.animatesTransitions = animatesTransitions
   }
 
   public func makeCoordinator() -> Coordinator {
-    Coordinator(animatedUpdates: animatedUpdates)
+    Coordinator(animatesTransitions: animatesTransitions)
   }
 
   public func makeUIView(context: Context) -> BlobBackgroundUIView {
@@ -24,21 +24,21 @@ public struct BlobBackgroundView: UIViewRepresentable {
 
   public func updateUIView(_ uiView: BlobBackgroundUIView, context: Context) {
     let configurationChanged = uiView.configuration != configuration
-    let animatedUpdatesChanged = context.coordinator.animatedUpdates != animatedUpdates
-    context.coordinator.animatedUpdates = animatedUpdates
+    let transitionsChanged = context.coordinator.animatesTransitions != animatesTransitions
+    context.coordinator.animatesTransitions = animatesTransitions
 
-    guard configurationChanged || animatedUpdatesChanged else {
+    guard configurationChanged || transitionsChanged else {
       return
     }
 
-    uiView.apply(configuration, animated: animatedUpdates)
+    uiView.apply(configuration, animated: animatesTransitions)
   }
 
   public final class Coordinator {
-    var animatedUpdates: Bool
+    var animatesTransitions: Bool
 
-    init(animatedUpdates: Bool) {
-      self.animatedUpdates = animatedUpdates
+    init(animatesTransitions: Bool) {
+      self.animatesTransitions = animatesTransitions
     }
   }
 }
@@ -46,13 +46,13 @@ public struct BlobBackgroundView: UIViewRepresentable {
 public extension View {
   func blobBackground(
     _ configuration: BlobBackgroundConfiguration = .idle,
-    animatedUpdates: Bool = true,
+    animatesTransitions: Bool = true,
     ignoresSafeAreaEdges edges: Edge.Set = .all
   ) -> some View {
     background(
       BlobBackgroundView(
         configuration: configuration,
-        animatedUpdates: animatedUpdates
+        animatesTransitions: animatesTransitions
       )
       .blobBackgroundIgnoringSafeArea(edges)
     )
