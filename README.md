@@ -18,6 +18,8 @@ DocC documentation is deployed to:
 https://docs.gorani.me/BlobBackgroundView/documentation/blobbackgroundview/
 ```
 
+The DocC deployment script treats an empty `HOSTING_BASE_PATH` or `/` as the package subpath (`TARGET_NAME`) so multiple packages can share the docs repository without overwriting each other.
+
 ## SwiftUI
 
 ```swift
