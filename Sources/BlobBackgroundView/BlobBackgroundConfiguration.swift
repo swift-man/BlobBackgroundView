@@ -1,7 +1,12 @@
 import UIKit
 
 public struct BlobBackgroundConfiguration: Equatable {
+  /// The maximum number of blobs rendered by the built-in seed layout.
+  public static let maxBlobCount = 12
+
   public var animationSpeed: Double
+
+  /// Requested blob count. Values above ``maxBlobCount`` are clamped.
   public var blobCount: Int
   public var blobScale: Double
   public var intensity: Double

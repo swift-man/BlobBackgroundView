@@ -12,6 +12,8 @@ public final class BlobBackgroundUIView: UIView {
 
   private let gradientLayer = CAGradientLayer()
   private var blobViews: [UIView] = []
+  private var foregroundObserver: NSObjectProtocol?
+  private var lastLayoutSize: CGSize = .zero
   private var reduceMotionObserver: NSObjectProtocol?
 
   public private(set) var configuration: BlobBackgroundConfiguration
@@ -49,11 +51,20 @@ public final class BlobBackgroundUIView: UIView {
     if let reduceMotionObserver {
       NotificationCenter.default.removeObserver(reduceMotionObserver)
     }
+    if let foregroundObserver {
+      NotificationCenter.default.removeObserver(foregroundObserver)
+    }
   }
 
   public override func layoutSubviews() {
     super.layoutSubviews()
     gradientLayer.frame = bounds
+
+    guard lastLayoutSize != bounds.size else {
+      return
+    }
+
+    lastLayoutSize = bounds.size
     layoutBlobs(animated: false)
   }
 
@@ -67,6 +78,14 @@ public final class BlobBackgroundUIView: UIView {
     animated: Bool = true
   ) {
     let shouldRestartPulse = self.configuration != configuration
+
+    if !shouldRestartPulse,
+       gradientLayer.colors != nil,
+       blobViews.count == clampedBlobCount(configuration.blobCount) {
+      refreshPulseAnimations()
+      return
+    }
+
     self.configuration = configuration
     backgroundColor = configuration.theme.surfaceTop
     updateGradient(animated: animated)
@@ -92,11 +111,21 @@ public final class BlobBackgroundUIView: UIView {
       }
     }
 
+    foregroundObserver = NotificationCenter.default.addObserver(
+      forName: UIApplication.willEnterForegroundNotification,
+      object: nil,
+      queue: .main
+    ) { [weak self] _ in
+      Task { @MainActor [weak self] in
+        self?.refreshPulseAnimations(forceRestart: true)
+      }
+    }
+
     apply(configuration, animated: false)
   }
 
   private func ensureBlobCount(_ count: Int) {
-    let targetCount = max(0, min(count, seeds.count))
+    let targetCount = clampedBlobCount(count)
 
     while blobViews.count < targetCount {
       let blobView = UIView()
@@ -110,6 +139,10 @@ public final class BlobBackgroundUIView: UIView {
     while blobViews.count > targetCount {
       blobViews.removeLast().removeFromSuperview()
     }
+  }
+
+  private func clampedBlobCount(_ count: Int) -> Int {
+    max(0, min(count, BlobBackgroundConfiguration.maxBlobCount, seeds.count))
   }
 
   private func updateGradient(animated: Bool) {

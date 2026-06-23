@@ -26,22 +26,18 @@ import SwiftUI
 
 struct HomeView: View {
   var body: some View {
-    ZStack {
-      BlobBackgroundView(configuration: .idle)
-        .edgesIgnoringSafeArea(.all)
-
-      Text("Hello")
-        .foregroundStyle(.white)
-    }
+    Text("Hello")
+      .foregroundStyle(.white)
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .blobBackground(.idle)
   }
 }
 ```
 
-You can also use the convenience modifier:
+You can also embed the SwiftUI background view directly when you need more layout control.
 
 ```swift
-content
-  .blobBackground(.success)
+BlobBackgroundView(configuration: .success)
 ```
 
 ## UIKit
@@ -85,4 +81,4 @@ let configuration = BlobBackgroundConfiguration(
 )
 ```
 
-`BlobBackgroundUIView` automatically pauses pulse animations when the view leaves a window and respects Reduce Motion.
+`blobCount` is clamped to `BlobBackgroundConfiguration.maxBlobCount` (12). `BlobBackgroundUIView` automatically pauses pulse animations when the view leaves a window, restarts them when the app returns to the foreground, and respects Reduce Motion.
