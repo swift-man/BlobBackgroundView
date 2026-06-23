@@ -14,16 +14,32 @@ public struct BlobBackgroundView: UIViewRepresentable {
     self.animatedUpdates = animatedUpdates
   }
 
+  public func makeCoordinator() -> Coordinator {
+    Coordinator(animatedUpdates: animatedUpdates)
+  }
+
   public func makeUIView(context: Context) -> BlobBackgroundUIView {
     BlobBackgroundUIView(configuration: configuration)
   }
 
   public func updateUIView(_ uiView: BlobBackgroundUIView, context: Context) {
-    guard uiView.configuration != configuration else {
+    let configurationChanged = uiView.configuration != configuration
+    let animatedUpdatesChanged = context.coordinator.animatedUpdates != animatedUpdates
+    context.coordinator.animatedUpdates = animatedUpdates
+
+    guard configurationChanged || animatedUpdatesChanged else {
       return
     }
 
     uiView.apply(configuration, animated: animatedUpdates)
+  }
+
+  public final class Coordinator {
+    var animatedUpdates: Bool
+
+    init(animatedUpdates: Bool) {
+      self.animatedUpdates = animatedUpdates
+    }
   }
 }
 
