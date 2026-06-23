@@ -104,12 +104,4 @@ public struct BlobBackgroundTheme: Equatable {
     secondary: UIColor(red: 1, green: 0.42, blue: 0.72, alpha: 1),
     accent: UIColor(red: 1, green: 0.82, blue: 0.3, alpha: 1)
   )
-
-  public static func == (lhs: BlobBackgroundTheme, rhs: BlobBackgroundTheme) -> Bool {
-    lhs.surfaceTop.isEqual(rhs.surfaceTop) &&
-      lhs.surfaceBottom.isEqual(rhs.surfaceBottom) &&
-      lhs.primary.isEqual(rhs.primary) &&
-      lhs.secondary.isEqual(rhs.secondary) &&
-      lhs.accent.isEqual(rhs.accent)
-  }
 }

@@ -180,7 +180,8 @@ public final class BlobBackgroundUIView: UIView {
       let alpha = CGFloat(clamp(configuration.intensity, min: 0.2, max: 1.8)) * 0.3
 
       let changes = {
-        blobView.frame = frame
+        blobView.bounds = CGRect(origin: .zero, size: frame.size)
+        blobView.center = CGPoint(x: frame.midX, y: frame.midY)
         blobView.layer.cornerRadius = frame.width / 2
         blobView.backgroundColor = color.withAlphaComponent(alpha)
       }
