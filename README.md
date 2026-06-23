@@ -28,7 +28,7 @@ struct HomeView: View {
   var body: some View {
     ZStack {
       BlobBackgroundView(configuration: .idle)
-        .ignoresSafeArea()
+        .edgesIgnoringSafeArea(.all)
 
       Text("Hello")
         .foregroundStyle(.white)
