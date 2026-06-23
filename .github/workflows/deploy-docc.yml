@@ -1,0 +1,47 @@
+name: Deploy DocC
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "Sources/**"
+      - "Package.swift"
+      - "README.md"
+      - "GeneratingDocumentationSite"
+      - ".github/workflows/deploy-docc.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-docc-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy-docs:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Build BlobBackgroundView DocC
+        run: |
+          ./GeneratingDocumentationSite
+          touch ./docs/.nojekyll
+
+      - name: Deploy to swift-man/docs
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          deploy_key: ${{ secrets.DOCS_DEPLOY_KEY }}
+          external_repository: swift-man/docs
+          publish_branch: main
+          publish_dir: ./docs
+          destination_dir: BlobBackgroundView
+          # With destination_dir set, keep_files: false cleans only this package
+          # folder while preserving sibling package docs in swift-man/docs.
+          keep_files: false
+          full_commit_message: Deploy BlobBackgroundView DocC from ${{ github.repository }}@${{ github.sha }}
