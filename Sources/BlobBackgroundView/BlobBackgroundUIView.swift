@@ -179,7 +179,7 @@ public final class BlobBackgroundUIView: UIView {
     for (index, blobView) in blobViews.enumerated() {
       let frame = frameForBlob(at: index)
       let color = colorForBlob(at: index)
-      let alpha = CGFloat(clamp(configuration.intensity, min: 0.2, max: 1.8)) * 0.3
+      let alpha = CGFloat(clamp(configuration.intensity, min: 0.2, max: 1.8, fallback: 1)) * 0.3
 
       let changes = {
         blobView.bounds = CGRect(origin: .zero, size: frame.size)
@@ -204,8 +204,8 @@ public final class BlobBackgroundUIView: UIView {
   private func frameForBlob(at index: Int) -> CGRect {
     let seed = seeds[index % seeds.count]
     let shortSide = min(bounds.width, bounds.height)
-    let scale = CGFloat(clamp(configuration.blobScale, min: 0.2, max: 3))
-    let drift = CGFloat(clamp(configuration.positionDrift, min: 0, max: 1.5))
+    let scale = CGFloat(clamp(configuration.blobScale, min: 0.2, max: 3, fallback: 1))
+    let drift = CGFloat(clamp(configuration.positionDrift, min: 0, max: 1.5, fallback: 0))
     let size = shortSide * seed.size * scale
     let center = CGPoint(
       x: bounds.width * seed.x + seed.driftX * drift,
@@ -238,8 +238,8 @@ public final class BlobBackgroundUIView: UIView {
   }
 
   private func startPulseAnimation(for view: UIView, index: Int) {
-    let strength = CGFloat(clamp(configuration.jellyStrength, min: 0, max: 1.5))
-    let speed = clamp(configuration.animationSpeed, min: 0.2, max: 3)
+    let strength = CGFloat(clamp(configuration.jellyStrength, min: 0, max: 1.5, fallback: 0))
+    let speed = clamp(configuration.animationSpeed, min: 0.2, max: 3, fallback: 1)
     let animation = CABasicAnimation(keyPath: "transform.scale")
     animation.fromValue = 1 - 0.06 * strength
     animation.toValue = 1 + 0.12 * strength + CGFloat(index % 3) * 0.025
@@ -268,8 +268,12 @@ public final class BlobBackgroundUIView: UIView {
   }
 }
 
-private func clamp(_ value: Double, min: Double, max: Double) -> Double {
-  Swift.max(min, Swift.min(max, value))
+private func clamp(_ value: Double, min: Double, max: Double, fallback: Double) -> Double {
+  guard value.isFinite else {
+    return fallback
+  }
+
+  return Swift.max(min, Swift.min(max, value))
 }
 
 private func colorsEqual(_ lhs: [Any]?, _ rhs: [CGColor]) -> Bool {
