@@ -1,5 +1,6 @@
 import UIKit
 
+@MainActor
 public final class BlobBackgroundUIView: UIView {
   private struct BlobSeed {
     let x: CGFloat
@@ -65,12 +66,13 @@ public final class BlobBackgroundUIView: UIView {
     _ configuration: BlobBackgroundConfiguration,
     animated: Bool = true
   ) {
+    let shouldRestartPulse = self.configuration != configuration
     self.configuration = configuration
     backgroundColor = configuration.theme.surfaceTop
     updateGradient(animated: animated)
     ensureBlobCount(configuration.blobCount)
     layoutBlobs(animated: animated)
-    refreshPulseAnimations()
+    refreshPulseAnimations(forceRestart: shouldRestartPulse)
   }
 
   private func configureView() {
@@ -85,23 +87,22 @@ public final class BlobBackgroundUIView: UIView {
       object: nil,
       queue: .main
     ) { [weak self] _ in
-      self?.refreshPulseAnimations()
+      Task { @MainActor [weak self] in
+        self?.refreshPulseAnimations()
+      }
     }
 
     apply(configuration, animated: false)
   }
 
   private func ensureBlobCount(_ count: Int) {
-    let targetCount = Int(clamp(Double(count), min: 0, max: Double(seeds.count)).rounded())
+    let targetCount = max(0, min(count, seeds.count))
 
     while blobViews.count < targetCount {
       let blobView = UIView()
       blobView.isUserInteractionEnabled = false
       blobView.layer.cornerCurve = .continuous
       blobView.layer.masksToBounds = true
-      blobView.layer.shadowColor = UIColor.white.cgColor
-      blobView.layer.shadowOpacity = 0.12
-      blobView.layer.shadowRadius = 28
       addSubview(blobView)
       blobViews.append(blobView)
     }
@@ -116,6 +117,10 @@ public final class BlobBackgroundUIView: UIView {
       configuration.theme.surfaceTop.cgColor,
       configuration.theme.surfaceBottom.cgColor
     ]
+
+    guard !colorsEqual(gradientLayer.colors, nextColors) else {
+      return
+    }
 
     guard animated, gradientLayer.colors != nil, !UIAccessibility.isReduceMotionEnabled else {
       gradientLayer.colors = nextColors
@@ -164,7 +169,7 @@ public final class BlobBackgroundUIView: UIView {
     let seed = seeds[index % seeds.count]
     let shortSide = min(bounds.width, bounds.height)
     let scale = CGFloat(clamp(configuration.blobScale, min: 0.2, max: 3))
-    let drift = CGFloat(clamp(configuration.colorDrift, min: 0, max: 1.5))
+    let drift = CGFloat(clamp(configuration.positionDrift, min: 0, max: 1.5))
     let size = shortSide * seed.size * scale
     let center = CGPoint(
       x: bounds.width * seed.x + seed.driftX * drift,
@@ -179,13 +184,17 @@ public final class BlobBackgroundUIView: UIView {
     )
   }
 
-  private func refreshPulseAnimations() {
+  private func refreshPulseAnimations(forceRestart: Bool = false) {
     guard window != nil, !UIAccessibility.isReduceMotionEnabled else {
       stopPulseAnimations()
       return
     }
 
     for (index, blobView) in blobViews.enumerated() {
+      if forceRestart {
+        blobView.layer.removeAnimation(forKey: "blobBackgroundPulse")
+      }
+
       if blobView.layer.animation(forKey: "blobBackgroundPulse") == nil {
         startPulseAnimation(for: blobView, index: index)
       }
@@ -225,4 +234,14 @@ public final class BlobBackgroundUIView: UIView {
 
 private func clamp(_ value: Double, min: Double, max: Double) -> Double {
   Swift.max(min, Swift.min(max, value))
+}
+
+private func colorsEqual(_ lhs: [Any]?, _ rhs: [CGColor]) -> Bool {
+  guard let lhs = lhs as? [CGColor], lhs.count == rhs.count else {
+    return false
+  }
+
+  return zip(lhs, rhs).allSatisfy { left, right in
+    left == right
+  }
 }

@@ -80,7 +80,7 @@ let configuration = BlobBackgroundConfiguration(
   intensity: 1.1,
   blobCount: 10,
   blobScale: 1.2,
-  colorDrift: 0.7,
+  positionDrift: 0.7,
   jellyStrength: 0.5
 )
 ```

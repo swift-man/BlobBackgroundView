@@ -19,6 +19,10 @@ public struct BlobBackgroundView: UIViewRepresentable {
   }
 
   public func updateUIView(_ uiView: BlobBackgroundUIView, context: Context) {
+    guard uiView.configuration != configuration else {
+      return
+    }
+
     uiView.apply(configuration, animated: animatedUpdates)
   }
 }
@@ -34,8 +38,19 @@ public extension View {
         configuration: configuration,
         animatedUpdates: animatedUpdates
       )
-      .edgesIgnoringSafeArea(edges)
+      .blobBackgroundIgnoringSafeArea(edges)
     )
+  }
+}
+
+private extension View {
+  @ViewBuilder
+  func blobBackgroundIgnoringSafeArea(_ edges: Edge.Set) -> some View {
+    if #available(iOS 14.0, tvOS 14.0, *) {
+      ignoresSafeArea(edges: edges)
+    } else {
+      edgesIgnoringSafeArea(edges)
+    }
   }
 }
 #endif

@@ -1,12 +1,12 @@
 import UIKit
 
-public struct BlobBackgroundConfiguration {
+public struct BlobBackgroundConfiguration: Equatable {
   public var animationSpeed: Double
   public var blobCount: Int
   public var blobScale: Double
-  public var colorDrift: Double
   public var intensity: Double
   public var jellyStrength: Double
+  public var positionDrift: Double
   public var theme: BlobBackgroundTheme
 
   public init(
@@ -14,7 +14,7 @@ public struct BlobBackgroundConfiguration {
     intensity: Double = 0.96,
     blobCount: Int = 8,
     blobScale: Double = 1.08,
-    colorDrift: Double = 0.48,
+    positionDrift: Double = 0.48,
     jellyStrength: Double = 0.36,
     animationSpeed: Double = 1
   ) {
@@ -22,8 +22,8 @@ public struct BlobBackgroundConfiguration {
     self.intensity = intensity
     self.blobCount = blobCount
     self.blobScale = blobScale
-    self.colorDrift = colorDrift
     self.jellyStrength = jellyStrength
+    self.positionDrift = positionDrift
     self.animationSpeed = animationSpeed
   }
 
@@ -32,7 +32,7 @@ public struct BlobBackgroundConfiguration {
     intensity: 0.96,
     blobCount: 8,
     blobScale: 1.08,
-    colorDrift: 0.48,
+    positionDrift: 0.48,
     jellyStrength: 0.36
   )
 
@@ -41,7 +41,7 @@ public struct BlobBackgroundConfiguration {
     intensity: 1.08,
     blobCount: 10,
     blobScale: 1.3,
-    colorDrift: 0.72,
+    positionDrift: 0.72,
     jellyStrength: 0.52
   )
 
@@ -50,12 +50,12 @@ public struct BlobBackgroundConfiguration {
     intensity: 1.2,
     blobCount: 12,
     blobScale: 1.42,
-    colorDrift: 0.86,
+    positionDrift: 0.86,
     jellyStrength: 0.62
   )
 }
 
-public struct BlobBackgroundTheme {
+public struct BlobBackgroundTheme: Equatable {
   public var accent: UIColor
   public var primary: UIColor
   public var secondary: UIColor
@@ -99,4 +99,12 @@ public struct BlobBackgroundTheme {
     secondary: UIColor(red: 1, green: 0.42, blue: 0.72, alpha: 1),
     accent: UIColor(red: 1, green: 0.82, blue: 0.3, alpha: 1)
   )
+
+  public static func == (lhs: BlobBackgroundTheme, rhs: BlobBackgroundTheme) -> Bool {
+    lhs.surfaceTop.isEqual(rhs.surfaceTop) &&
+      lhs.surfaceBottom.isEqual(rhs.surfaceBottom) &&
+      lhs.primary.isEqual(rhs.primary) &&
+      lhs.secondary.isEqual(rhs.secondary) &&
+      lhs.accent.isEqual(rhs.accent)
+  }
 }
