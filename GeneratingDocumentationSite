@@ -27,12 +27,21 @@ xcodebuild docbuild \
   -derivedDataPath "$DERIVED_DATA_PATH" \
   -skipMacroValidation
 
-FOUND_ARCHIVE="$(find "$DERIVED_DATA_PATH" -name "$TARGET_NAME.doccarchive" -type d -print -quit)"
+FOUND_ARCHIVES="$(find "$DERIVED_DATA_PATH" -name "$TARGET_NAME.doccarchive" -type d -print)"
+ARCHIVE_COUNT="$(printf '%s\n' "$FOUND_ARCHIVES" | sed '/^$/d' | wc -l | tr -d ' ')"
 
-if [ -z "$FOUND_ARCHIVE" ]; then
+if [ "$ARCHIVE_COUNT" -eq 0 ]; then
   echo "error: no DocC archive found for $TARGET_NAME" >&2
   exit 1
 fi
+
+if [ "$ARCHIVE_COUNT" -gt 1 ]; then
+  echo "error: expected one DocC archive for $TARGET_NAME, found $ARCHIVE_COUNT" >&2
+  printf '%s\n' "$FOUND_ARCHIVES" >&2
+  exit 1
+fi
+
+FOUND_ARCHIVE="$FOUND_ARCHIVES"
 
 cp -R "$FOUND_ARCHIVE" "$DOCC_ARCHIVE_PATH"
 
