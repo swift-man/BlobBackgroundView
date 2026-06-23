@@ -41,5 +41,7 @@ jobs:
           publish_branch: main
           publish_dir: ./docs
           destination_dir: BlobBackgroundView
-          keep_files: true
+          # With destination_dir set, keep_files: false cleans only this package
+          # folder while preserving sibling package docs in swift-man/docs.
+          keep_files: false
           full_commit_message: Deploy BlobBackgroundView DocC from ${{ github.repository }}@${{ github.sha }}
