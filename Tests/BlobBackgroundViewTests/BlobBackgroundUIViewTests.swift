@@ -7,8 +7,6 @@ import UIKit
 @MainActor
 final class BlobBackgroundUIViewTests: XCTestCase {
   func testMotionAnimationsStartAfterViewMovesIntoWindow() throws {
-    try XCTSkipIf(UIAccessibility.isReduceMotionEnabled, "Reduce Motion disables blob motion animations.")
-
     let configuration = BlobBackgroundConfiguration(
       theme: .aurora,
       intensity: 1,
@@ -28,13 +26,16 @@ final class BlobBackgroundUIViewTests: XCTestCase {
     XCTAssertEqual(view.subviews.count, configuration.blobCount)
 
     let firstBlobLayer = try XCTUnwrap(view.subviews.first?.layer)
-    XCTAssertNotNil(firstBlobLayer.animation(forKey: "blobBackgroundPulse"))
-    XCTAssertNotNil(firstBlobLayer.animation(forKey: "blobBackgroundDrift"))
+    if UIAccessibility.isReduceMotionEnabled {
+      XCTAssertNil(firstBlobLayer.animation(forKey: "blobBackgroundPulse"))
+      XCTAssertNil(firstBlobLayer.animation(forKey: "blobBackgroundDrift"))
+    } else {
+      XCTAssertNotNil(firstBlobLayer.animation(forKey: "blobBackgroundPulse"))
+      XCTAssertNotNil(firstBlobLayer.animation(forKey: "blobBackgroundDrift"))
+    }
   }
 
   func testDriftAnimationStopsWhenPositionDriftIsZero() throws {
-    try XCTSkipIf(UIAccessibility.isReduceMotionEnabled, "Reduce Motion disables blob motion animations.")
-
     let movingConfiguration = BlobBackgroundConfiguration(
       blobCount: 3,
       positionDrift: 1,
@@ -53,12 +54,21 @@ final class BlobBackgroundUIViewTests: XCTestCase {
     view.layoutIfNeeded()
 
     let firstBlobLayer = try XCTUnwrap(view.subviews.first?.layer)
-    XCTAssertNotNil(firstBlobLayer.animation(forKey: "blobBackgroundDrift"))
+    if UIAccessibility.isReduceMotionEnabled {
+      XCTAssertNil(firstBlobLayer.animation(forKey: "blobBackgroundPulse"))
+      XCTAssertNil(firstBlobLayer.animation(forKey: "blobBackgroundDrift"))
+    } else {
+      XCTAssertNotNil(firstBlobLayer.animation(forKey: "blobBackgroundDrift"))
+    }
 
     view.apply(staticConfiguration, animated: false)
 
     XCTAssertNil(firstBlobLayer.animation(forKey: "blobBackgroundDrift"))
-    XCTAssertNotNil(firstBlobLayer.animation(forKey: "blobBackgroundPulse"))
+    if UIAccessibility.isReduceMotionEnabled {
+      XCTAssertNil(firstBlobLayer.animation(forKey: "blobBackgroundPulse"))
+    } else {
+      XCTAssertNotNil(firstBlobLayer.animation(forKey: "blobBackgroundPulse"))
+    }
   }
 }
 #else

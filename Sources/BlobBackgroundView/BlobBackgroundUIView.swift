@@ -119,7 +119,7 @@ public final class BlobBackgroundUIView: UIView {
       object: nil,
       queue: .main
     ) { [weak self] _ in
-      Task { @MainActor [weak self] in
+      MainActor.assumeIsolated {
         self?.refreshMotionAnimations()
       }
     })
@@ -129,7 +129,7 @@ public final class BlobBackgroundUIView: UIView {
       object: nil,
       queue: .main
     ) { [weak self] _ in
-      Task { @MainActor [weak self] in
+      MainActor.assumeIsolated {
         self?.refreshMotionAnimations(forceRestart: true)
       }
     })
@@ -139,7 +139,7 @@ public final class BlobBackgroundUIView: UIView {
       object: nil,
       queue: .main
     ) { [weak self] _ in
-      Task { @MainActor [weak self] in
+      MainActor.assumeIsolated {
         self?.stopMotionAnimations()
       }
     })
