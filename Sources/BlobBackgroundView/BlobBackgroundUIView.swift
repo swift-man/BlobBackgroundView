@@ -13,6 +13,12 @@ private final class NotificationObserverBag {
   }
 }
 
+private enum BlobBackgroundAnimationKey {
+  static let gradientColors = "blobBackgroundGradientColors"
+  static let pulse = "blobBackgroundPulse"
+  static let drift = "blobBackgroundDrift"
+}
+
 @MainActor
 public final class BlobBackgroundUIView: UIView {
   private struct BlobSeed {
@@ -72,23 +78,24 @@ public final class BlobBackgroundUIView: UIView {
 
     lastLayoutSize = bounds.size
     layoutBlobs(animated: false)
+    refreshMotionAnimations()
   }
 
   public override func didMoveToWindow() {
     super.didMoveToWindow()
-    refreshPulseAnimations()
+    refreshMotionAnimations()
   }
 
   public func apply(
     _ configuration: BlobBackgroundConfiguration,
     animated: Bool = true
   ) {
-    let shouldRestartPulse = self.configuration != configuration
+    let shouldRestartMotion = self.configuration != configuration
 
-    if !shouldRestartPulse,
+    if !shouldRestartMotion,
        gradientLayer.colors != nil,
        blobViews.count == clampedBlobCount(configuration.blobCount) {
-      refreshPulseAnimations()
+      refreshMotionAnimations()
       return
     }
 
@@ -97,7 +104,7 @@ public final class BlobBackgroundUIView: UIView {
     updateGradient(animated: animated)
     ensureBlobCount(configuration.blobCount)
     layoutBlobs(animated: animated)
-    refreshPulseAnimations(forceRestart: shouldRestartPulse)
+    refreshMotionAnimations(forceRestart: shouldRestartMotion)
   }
 
   private func configureView() {
@@ -112,8 +119,8 @@ public final class BlobBackgroundUIView: UIView {
       object: nil,
       queue: .main
     ) { [weak self] _ in
-      Task { @MainActor [weak self] in
-        self?.refreshPulseAnimations()
+      MainActor.assumeIsolated {
+        self?.refreshMotionAnimations()
       }
     })
 
@@ -122,8 +129,18 @@ public final class BlobBackgroundUIView: UIView {
       object: nil,
       queue: .main
     ) { [weak self] _ in
-      Task { @MainActor [weak self] in
-        self?.refreshPulseAnimations(forceRestart: true)
+      MainActor.assumeIsolated {
+        self?.refreshMotionAnimations(forceRestart: true)
+      }
+    })
+
+    notificationObservers.add(NotificationCenter.default.addObserver(
+      forName: UIApplication.didEnterBackgroundNotification,
+      object: nil,
+      queue: .main
+    ) { [weak self] _ in
+      MainActor.assumeIsolated {
+        self?.stopMotionAnimations()
       }
     })
 
@@ -172,7 +189,7 @@ public final class BlobBackgroundUIView: UIView {
     animation.duration = 0.42
     animation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
     gradientLayer.colors = nextColors
-    gradientLayer.add(animation, forKey: "blobBackgroundGradientColors")
+    gradientLayer.add(animation, forKey: BlobBackgroundAnimationKey.gradientColors)
   }
 
   private func layoutBlobs(animated: Bool) {
@@ -224,19 +241,23 @@ public final class BlobBackgroundUIView: UIView {
     )
   }
 
-  private func refreshPulseAnimations(forceRestart: Bool = false) {
+  private func refreshMotionAnimations(forceRestart: Bool = false) {
     guard window != nil, !UIAccessibility.isReduceMotionEnabled else {
-      stopPulseAnimations()
+      stopMotionAnimations()
       return
     }
 
     for (index, blobView) in blobViews.enumerated() {
       if forceRestart {
-        blobView.layer.removeAnimation(forKey: "blobBackgroundPulse")
+        stopMotionAnimations(for: blobView)
       }
 
-      if blobView.layer.animation(forKey: "blobBackgroundPulse") == nil {
+      if blobView.layer.animation(forKey: BlobBackgroundAnimationKey.pulse) == nil {
         startPulseAnimation(for: blobView, index: index)
+      }
+
+      if blobView.layer.animation(forKey: BlobBackgroundAnimationKey.drift) == nil {
+        startDriftAnimation(for: blobView, index: index)
       }
     }
   }
@@ -255,13 +276,44 @@ public final class BlobBackgroundUIView: UIView {
     animation.autoreverses = true
     animation.repeatCount = .infinity
     animation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-    view.layer.add(animation, forKey: "blobBackgroundPulse")
+    view.layer.add(animation, forKey: BlobBackgroundAnimationKey.pulse)
   }
 
-  private func stopPulseAnimations() {
-    blobViews.forEach {
-      $0.layer.removeAnimation(forKey: "blobBackgroundPulse")
+  private func startDriftAnimation(for view: UIView, index: Int) {
+    let drift = CGFloat(configuration.positionDrift)
+    guard drift > 0 else {
+      return
     }
+
+    let seed = seeds[index % seeds.count]
+    let travelX = seed.driftX * drift
+    let travelY = seed.driftY * drift
+    guard hypot(travelX, travelY) > 0.5 else {
+      return
+    }
+
+    let animation = CAKeyframeAnimation(keyPath: "position")
+    animation.isAdditive = true
+    animation.values = [
+      CGPoint.zero,
+      CGPoint(x: travelX * 0.42, y: travelY * 0.46),
+      CGPoint(x: -travelY * 0.18, y: travelX * 0.18),
+      CGPoint(x: -travelX * 0.3, y: -travelY * 0.36),
+      CGPoint.zero
+    ].map(NSValue.init(cgPoint:))
+    animation.calculationMode = .cubicPaced
+    animation.duration = (9.5 + Double(index % 5) * 1.35) / configuration.animationSpeed
+    animation.repeatCount = .infinity
+    view.layer.add(animation, forKey: BlobBackgroundAnimationKey.drift)
+  }
+
+  private func stopMotionAnimations() {
+    blobViews.forEach(stopMotionAnimations(for:))
+  }
+
+  private func stopMotionAnimations(for view: UIView) {
+    view.layer.removeAnimation(forKey: BlobBackgroundAnimationKey.pulse)
+    view.layer.removeAnimation(forKey: BlobBackgroundAnimationKey.drift)
   }
 
   private func colorForBlob(at index: Int) -> UIColor {

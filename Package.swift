@@ -17,6 +17,10 @@ let package = Package(
   targets: [
     .target(
       name: "BlobBackgroundView"
+    ),
+    .testTarget(
+      name: "BlobBackgroundViewTests",
+      dependencies: ["BlobBackgroundView"]
     )
   ]
 )
