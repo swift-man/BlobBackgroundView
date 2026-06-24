@@ -78,7 +78,7 @@ public final class BlobBackgroundUIView: UIView {
 
     lastLayoutSize = bounds.size
     layoutBlobs(animated: false)
-    refreshMotionAnimations(forceRestart: true)
+    refreshMotionAnimations()
   }
 
   public override func didMoveToWindow() {
@@ -131,6 +131,16 @@ public final class BlobBackgroundUIView: UIView {
     ) { [weak self] _ in
       Task { @MainActor [weak self] in
         self?.refreshMotionAnimations(forceRestart: true)
+      }
+    })
+
+    notificationObservers.add(NotificationCenter.default.addObserver(
+      forName: UIApplication.didEnterBackgroundNotification,
+      object: nil,
+      queue: .main
+    ) { [weak self] _ in
+      Task { @MainActor [weak self] in
+        self?.stopMotionAnimations()
       }
     })
 
@@ -294,7 +304,6 @@ public final class BlobBackgroundUIView: UIView {
     animation.calculationMode = .cubicPaced
     animation.duration = (9.5 + Double(index % 5) * 1.35) / configuration.animationSpeed
     animation.repeatCount = .infinity
-    animation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
     view.layer.add(animation, forKey: BlobBackgroundAnimationKey.drift)
   }
 
